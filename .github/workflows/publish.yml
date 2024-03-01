@@ -267,13 +267,16 @@ jobs:
             # Otherwise, use the tag name (if triggered via release), or explicit version (if triggered via workflow_dispatch)
             VERSION="${GITHUB_REF_NAME}"
           fi
-          # If triggered via workflow_dispatch, perform a dry-run
+          # If triggered via workflow_dispatch, we are either performing a dry-run on the current branch, or creating a PR-release for the given PR number
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            # If the PR number is set, pass in a special version format which the nx-release.ts script will recognize (pr-<pr_number>)
             if [ -n "${{ github.event.inputs.pr }}" ]; then
-              DRY_RUN="--dry-run"
-            else
               DRY_RUN=""
               VERSION="pr-${{ github.event.inputs.pr }}"
+            else
+              # Otherwise, perform a dry-run on the current branch
+              DRY_RUN="--dry-run"
+              VERSION="0.0.0-dry-run.0"
             fi
           else
             DRY_RUN=""
