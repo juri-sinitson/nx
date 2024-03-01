@@ -321,7 +321,7 @@ jobs:
             # If the PR number is set, pass in a special version format which the nx-release.ts script will recognize (pr-<pr_number>)
             if [ -n "${{ github.event.inputs.pr }}" ]; then
               DRY_RUN=""
-              VERSION="pr-${{ github.event.inputs.pr }}"
+              VERSION="${{ steps.versioning.outputs.pr_release_version }}"
             else
               # Otherwise, perform a dry-run on the current branch
               DRY_RUN="--dry-run"
@@ -342,19 +342,19 @@ jobs:
           git push -f origin website
           fi
       - name: Post Release Comment on PR
-        if: success() && github.event.inputs.pr
+        if: success() && github.event.inputs.pr && steps.versioning.outputs.pr_release_version
         uses: actions/github-script@v6
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
             const issue_number = ${{ github.event.inputs.pr }};
-            const shortSHA = context.sha.substring(0, 7);
-            const version = `pr-${{github.event.inputs.pr}}-${shortSHA}`;
-            const message = `You can try out this PR with ${version}.`;
+            const prReleaseVersion = "${{ steps.versioning.outputs.pr_release_version }}";
+            const message = `You can try out this PR with ${prReleaseVersion}.`;
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: issue_number,
               body: message
             });
+        
         
