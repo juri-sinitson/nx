@@ -97,6 +97,26 @@ jobs:
         with:
           version: 8
 
+      - name: Fetch PR details (if PR number provided)
+        if: github.event.inputs.pr
+        id: pr_details
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: ${{ github.event.inputs.pr }},
+            });
+            return pr.data.head.ref;
+      
+      - name: Checkout PR branch (if PR number provided)
+        if: github.event.inputs.pr
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ steps.pr_details.outputs.result }}
+
       - name: Setup node
         uses: actions/setup-node@v4
         if: ${{ !matrix.settings.docker }}
