@@ -312,3 +312,20 @@ jobs:
           git branch -f website
           git push -f origin website
           fi
+      - name: Post Release Comment on PR
+        if: success() && github.event.inputs.pr
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const issue_number = ${{ github.event.inputs.pr }};
+            const shortSHA = context.sha.substring(0, 7);
+            const version = `pr-${{github.event.inputs.pr}}-${shortSHA}`;
+            const message = `You can try out this PR with ${version}.`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue_number,
+              body: message
+            });
+        
