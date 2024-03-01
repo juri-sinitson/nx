@@ -259,8 +259,10 @@ function parseArgs() {
         // Get the current short git sha
         const gitSha = execSync('git rev-parse --short HEAD').toString().trim();
 
-        if (version.startsWith('pr-')) {
-          return `0.0.0-${version}-${YYYYMMDD}-${gitSha}`;
+        if (version.startsWith('pr-') && validFormatForPRrelease(version)) {
+          return `0.0.0-${validFormatForPRrelease(
+            version
+          )}-${YYYYMMDD}-${gitSha}`;
         }
 
         const currentLatestVersion = execSync('npm view nx@latest version')
@@ -408,4 +410,23 @@ function determineDistTag(
       : 'latest';
 
   return distTag;
+}
+
+function validFormatForPRrelease(input: string): string | undefined {
+  // Check that format is pr-<number>
+  const regex = /^pr-(\d+)$/;
+  const match = input.match(regex);
+
+  if (match) {
+    return input;
+  } else {
+    // If the input has a # (eg. pr-#1234), remove it and try again
+    const fixedInput = input.replace(/#/, '');
+    const matchFixed = fixedInput.match(regex);
+    if (matchFixed) {
+      return fixedInput;
+    } else {
+      return undefined;
+    }
+  }
 }
