@@ -103,9 +103,8 @@ jobs:
               repo: context.repo.repo,
               pull_number: ${{ github.event.inputs.pr }},
             });
-            const branchRef = pr.data.head.ref.replace(/"/g, ''); // Remove double quotes
-            console.log(`Fetched PR branch name: ${branchRef}`);
-            return branchRef;
+            console.log(`Fetched PR details: ${pr.data.head.ref}`);
+            return pr.data.head.ref;
           
       - name: Generate version string for PR release
         if: github.event.inputs.pr
@@ -130,9 +129,6 @@ jobs:
             const prMatch = prInput.match(/^\d+$/);
             
             let prReleaseVersion = '';
-
-            const prDetails = '${{ steps.pr_details.outputs.result }}';
-            console.log(`PR details: ${prDetails}`);
             
             if (prMatch) {
               // prInput is valid (consists only of digits after potentially removing a leading hash)
@@ -146,9 +142,15 @@ jobs:
             
             core.setOutput('pr_release_version', prReleaseVersion); 
 
+      # The reason we're doing this is because the branch name comes back in 
+      # double quotes, and we need to remove them to use it as a ref
+      - name: Set Clean Branch Name
+        if: github.event.inputs.pr
+        run: echo "CLEAN_BRANCH_NAME=${{ steps.pr_details.outputs.result }}" | sed 's/"//g' >> $GITHUB_ENV
+
       - uses: actions/checkout@v4
         with:
-          ref: ${{ steps.pr_details.outputs.result }} 
+          ref: ${{ env.CLEAN_BRANCH_NAME }}
 
       - uses: pnpm/action-setup@v2
         with:
