@@ -103,8 +103,9 @@ jobs:
               repo: context.repo.repo,
               pull_number: ${{ github.event.inputs.pr }},
             });
-            console.log(`Fetched PR details: ${pr.data.head.ref}`);
-            return pr.data.head.ref;
+            const branchRef = pr.data.head.ref.replace(/"/g, ''); // Remove double quotes
+            console.log(`Fetched PR branch name: ${branchRef}`);
+            return branchRef;
           
       - name: Generate version string for PR release
         if: github.event.inputs.pr
