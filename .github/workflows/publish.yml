@@ -129,6 +129,9 @@ jobs:
             const prMatch = prInput.match(/^\d+$/);
             
             let prReleaseVersion = '';
+
+            const prDetails = '${{ steps.pr_details.outputs.result }}';
+            console.log(`PR details: ${prDetails}`);
             
             if (prMatch) {
               // prInput is valid (consists only of digits after potentially removing a leading hash)
@@ -144,7 +147,7 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
-          ref: 'feat/pr-release-nx' 
+          ref: ${{ steps.pr_details.outputs.result }} 
 
       - uses: pnpm/action-setup@v2
         with:
