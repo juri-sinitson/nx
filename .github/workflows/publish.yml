@@ -118,29 +118,12 @@ jobs:
             const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
             const day = String(date.getDate()).padStart(2, '0');
             const YYYYMMDD = `${year}${month}${day}`;
-
             // Get the current short git sha
             const shortSHA = context.sha.substring(0, 7);
-
-            // Attempt to correct the PR input format by removing '#' character if present
-            const prInput = '${{ github.event.inputs.pr }}'.replace(/^#/, '');
-
-            // Now, check if the remaining prInput consists only of digits
-            const prMatch = prInput.match(/^\d+$/);
-            
-            let prReleaseVersion = '';
-            
-            if (prMatch) {
-              // prInput is valid (consists only of digits after potentially removing a leading hash)
-              prReleaseVersion = `0.0.0-pr-${prInput}-${YYYYMMDD}-${shortSHA}`;
-              console.log(`Generated PR release version: ${prReleaseVersion}`);
-            } else {
-              // prInput is invalid (does not consist solely of digits after removing the hash)
-              core.setFailed('PR input is invalid. Expected a numeric value with an optional leading hash.');
-              return;
-            }
-            
+            const prInput = ${{ github.event.inputs.pr }};
+            const prReleaseVersion = `0.0.0-pr-${prInput}-${YYYYMMDD}-${shortSHA}`;
             core.setOutput('pr_release_version', prReleaseVersion); 
+            console.log(`Generated PR release version: ${prReleaseVersion}`);
 
       # The reason we're doing this is because the branch name comes back in 
       # double quotes, and we need to remove them to use it as a ref
@@ -229,6 +212,8 @@ jobs:
      steps:
        - uses: actions/checkout@v4
          if: ${{ github.event_name != 'schedule' }}
+         with:
+          ref: ${{ env.CLEAN_BRANCH_NAME }}
        - name: Build
          id: build
          if: ${{ github.event_name != 'schedule' }}
@@ -295,6 +280,8 @@ jobs:
       NPM_CONFIG_PROVENANCE: true
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.CLEAN_BRANCH_NAME }}
       - uses: pnpm/action-setup@v2
         with:
           version: 8
@@ -326,12 +313,15 @@ jobs:
             # Otherwise, use the tag name (if triggered via release), or explicit version (if triggered via workflow_dispatch)
             VERSION="${GITHUB_REF_NAME}"
           fi
+          echo "VERSION set to $VERSION"
           # If triggered via workflow_dispatch, we are either performing a dry-run on the current branch, or creating a PR-release for the given PR number
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Workflow dispatch"
             # If the PR number is set, pass in a special version format which the nx-release.ts script will recognize (pr-<pr_number>)
             if [ -n "${{ github.event.inputs.pr }}" ]; then
               DRY_RUN=""
               VERSION="${{ steps.versioning.outputs.pr_release_version }}"
+            echo "VERSION from PR input set to $VERSION"
             else
               # Otherwise, perform a dry-run on the current branch
               DRY_RUN="--dry-run"
@@ -340,7 +330,9 @@ jobs:
           else
             DRY_RUN=""
           fi
-          pnpm nx-release --local=false $VERSION $DRY_RUN
+          echo "finally VERSION set to $VERSION"
+          echo "finally DRY_RUN set to $DRY_RUN"
+          pnpm nx-release --local=false $VERSION --dry-run
       - name: Trigger Docs Release
         # Publish docs only on a full release
         if: ${{ !github.event.release.prerelease }}
