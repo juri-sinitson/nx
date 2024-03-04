@@ -121,22 +121,25 @@ jobs:
             // Get the current short git sha
             const shortSHA = context.sha.substring(0, 7);
 
-            // Attempt to correct the PR input format by removing '#' characters
-            let prInput = '${{ github.event.inputs.pr }}'.replace(/#/g, '');
+            // Attempt to correct the PR input format by removing '#' character if present
+            const prInput = '${{ github.event.inputs.pr }}'.replace(/^#/, '');
 
-            // Validate the corrected PR input format
-            const prMatch = prInput.match(/^pr-(\d+)$/);
+            // Now, check if the remaining prInput consists only of digits
+            const prMatch = prInput.match(/^\d+$/);
+            
             let prReleaseVersion = '';
-
+            
             if (prMatch) {
-              prReleaseVersion = `0.0.0-pr-${prMatch[1]}-${YYYYMMDD}-${shortSHA}`;
+              // prInput is valid (consists only of digits after potentially removing a leading hash)
+              prReleaseVersion = `0.0.0-pr-${prInput}-${YYYYMMDD}-${shortSHA}`;
+              console.log(`Generated PR release version: ${prReleaseVersion}`);
             } else {
-              // If the format is still invalid after correction, fail the step
-              core.setFailed('PR number format is invalid after correction.');
+              // prInput is invalid (does not consist solely of digits after removing the hash)
+              core.setFailed('PR input is invalid. Expected a numeric value with an optional leading hash.');
               return;
             }
-
-            core.setOutput('pr_release_version', prReleaseVersion);
+            
+            core.setOutput('pr_release_version', prReleaseVersion); 
 
       - uses: actions/checkout@v4
         with:
