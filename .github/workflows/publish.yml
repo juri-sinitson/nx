@@ -252,6 +252,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
+      pull-requests: write
     needs:
       - build-freebsd
       - build
