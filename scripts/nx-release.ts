@@ -246,18 +246,8 @@ function parseArgs() {
           return version;
         }
         /**
-         * Handle the special case of `canary` or PR releases
+         * Handle the special case of `canary`
          */
-
-        // Create YYYYMMDD string
-        const date = new Date();
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
-        const day = String(date.getDate()).padStart(2, '0');
-        const YYYYMMDD = `${year}${month}${day}`;
-
-        // Get the current short git sha
-        const gitSha = execSync('git rev-parse --short HEAD').toString().trim();
 
         const currentLatestVersion = execSync('npm view nx@latest version')
           .toString()
@@ -284,6 +274,16 @@ function parseArgs() {
         if (!canaryBaseVersion) {
           throw new Error(`Unable to determine a base for the canary version.`);
         }
+
+        // Create YYYYMMDD string
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+        const day = String(date.getDate()).padStart(2, '0');
+        const YYYYMMDD = `${year}${month}${day}`;
+
+        // Get the current short git sha
+        const gitSha = execSync('git rev-parse --short HEAD').toString().trim();
 
         const canaryVersion = `${canaryBaseVersion}-canary.${YYYYMMDD}-${gitSha}`;
 
@@ -364,6 +364,7 @@ function determineDistTag(
     return 'canary';
   }
 
+  // Special case of PR release
   if (newVersion.startsWith('0.0.0-pr-')) {
     return 'pull-request';
   }
