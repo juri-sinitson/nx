@@ -106,9 +106,9 @@ jobs:
             console.log(`Fetched PR details: ${pr.data.head.ref}`);
             return pr.data.head.ref;
 
-      # The reason we're doing this is because the branch name comes back in 
-      # double quotes, and we need to remove them to use it as a ref
       - name: Set Clean Branch Name
+        # The reason we're doing this is because the branch name comes back 
+        # in double quotes, and we need to remove them to use it as a ref to checkout
         if: github.event.inputs.pr
         run: echo "CLEAN_BRANCH_NAME=${{ steps.pr_details.outputs.result }}" | sed 's/"//g' >> $GITHUB_ENV
 
@@ -317,11 +317,11 @@ jobs:
           # If triggered via workflow_dispatch, we are either performing a dry-run on the current branch, or creating a PR-release for the given PR number
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "Workflow dispatch"
-            # If the PR number is set, pass in a special version format which the nx-release.ts script will recognize (pr-<pr_number>)
+            # If the PR number is set, and pr_release_version is set, use the generated pr_release_version
             if [ -n "${{ github.event.inputs.pr }}" ] && [ -n "${{ steps.versioning.outputs.pr_release_version }}" ]; then
               DRY_RUN=""
               VERSION="${{ steps.versioning.outputs.pr_release_version }}"
-              echo "VERSION from PR input set to $VERSION"
+              echo "Version for PR release set to: $VERSION"
             else
               # Otherwise, perform a dry-run on the current branch
               DRY_RUN="--dry-run"
@@ -330,8 +330,8 @@ jobs:
           else
             DRY_RUN=""
           fi
-          echo "finally VERSION set to $VERSION"
-          echo "finally DRY_RUN set to $DRY_RUN"
+          echo "Version set to: $VERSION"
+          echo "DRY_RUN set to: $DRY_RUN"
           pnpm nx-release --local=false $VERSION --dry-run
       - name: Trigger Docs Release
         # Publish docs only on a full release
