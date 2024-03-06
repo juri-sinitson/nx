@@ -315,7 +315,6 @@ jobs:
             # Otherwise, use the tag name (if triggered via release), or explicit version (if triggered via workflow_dispatch)
             VERSION="${GITHUB_REF_NAME}"
           fi
-          echo "VERSION set to $VERSION"
           # If triggered via workflow_dispatch, we are either performing a dry-run on the current branch, or creating a PR-release for the given PR number
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "Workflow dispatch"
