@@ -354,13 +354,28 @@ jobs:
             const issue_number = ${{ github.event.inputs.pr }};
             const prReleaseVersion = "${{ steps.versioning.outputs.pr_release_version }}";
             const message = `
-            | **Published version** | [`${prReleaseVersion}`](https://npmjs.com/package/@storybook/cli/v/${prReleaseVersion}) |
+            ## 🐳 We have a release for that!
+
+            This PR has a release associated with it. You can try it out using this command:
+            
+            \`\`\`bash
+            npx create-nx-workspace@${prReleaseVersion} my-workspace
+            \`\`\`
+
+            Or just copy this version and use it in your own command:
+            \`\`\`bash
+            ${prReleaseVersion}
+            \`\`\`
+
+            | Release details | 📑 |
+            | ------------- | ------------- |
+            | **Published version** | [${prReleaseVersion}](https://npmjs.com/package/@storybook/cli/v/${prReleaseVersion}) |
             | **Triggered by** | @${{ github.triggering_actor }} |
-            | **Branch** | [`${{ env.CLEAN_BRANCH_NAME }}`](https://github.com/nrwl/nx/tree/${{ env.CLEAN_BRANCH_NAME }}) |
-            | **Commit** | [`${{ steps.versioning.outputs.short_sha }}`](https://github.com/nrwl/nx/commit/${{ steps.versioning.outputs.long_sha }}) |
+            | **Branch** | [${{ env.CLEAN_BRANCH_NAME }}](https://github.com/nrwl/nx/tree/${{ env.CLEAN_BRANCH_NAME }}) |
+            | **Commit** | [${{ steps.versioning.outputs.short_sha }}](https://github.com/nrwl/nx/commit/${{ steps.versioning.outputs.long_sha }}) |
             | **Workflow run** | [${{ github.run_id }}](https://github.com/nrwl/nx/actions/runs/${{ github.run_id }}) |
 
-            To request a new release of this pull request, mention the Nx team.   
+            To request a new release for this pull request, mention someone from the Nx team or the \`@nrwl/nx-pipelines-reviewers\`.   
             `;
             await github.rest.issues.createComment({
               owner: context.repo.owner,
@@ -368,5 +383,3 @@ jobs:
               issue_number: issue_number,
               body: message
             });
-        
-        
